@@ -1,0 +1,93 @@
+---
+title: "HW4_xc2463"
+author: "Xiwen Chen"
+date: "2019/3/24"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 2 (Subset Selection Methods, 6 points)
+```{r}
+credit<-read.csv("credit.csv")
+```
+ (Best subset selection) The regsubsets() function in R (part of the leaps library) performs the 
+best subset selection by identifying the best model that contains a given number of predictors, 
+where best is defined to be the one which minimizes the residual sum-of-squares (RSS).
+Here we need to represent the qualitative predictors by dummy variables. gender, student and 
+ethnicity are all two-level categorical variables, and each of them is coded by one dummy 
+variable. ethnicity takes on tree values and is coded by two dummy variables. Therefore, we have 
+11 predictors in total.
+```{r}
+library(leaps)
+credit.d<-credit[,-1]
+model.1<-regsubsets(Balance~.,data=credit.d)
+summary.1<-summary(model.1)
+```
+
+(Forward stepwise selection) We can also use the regsubsets() function to perform forward stepwise
+selection, using the argument method=``forward``.
+```{r}
+model.2<-regsubsets(Balance~.,data=credit.d,method="forward")
+summary.2<-summary(model.2)
+```
+
+(Backward stepwise selection) The regsubsets() function can be used to perform backward stepwise
+selection as well ( method=``backward``). Here we start from the full model and at each step remove a predictor which leaves a model having smallest RSS.
+```{r}
+model.3<-regsubsets(Balance~., data=credit.d,method="backward")
+summary.3<-summary(model.3)
+```
+
+Homework problems.
+1. Apply the three subset selection methods mentioned above to Credit data set. Plot the RSS as a function of the number of variables for these three methods in the same figure.
+```{r}
+n<-length(summary.1$rss)
+plot(1:n, summary.1$rss, type="l", col="purple",
+     lty=1,xlab="Number of variables", ylab= "RSS")
+points(summary.1$rss,col="purple")
+lines(1:n, summary.2$rss,col="blue",lty=2)
+points(summary.2$rss,col="blue",pch=8)
+lines(1:n, summary.3$rss,col="green",lty=3)
+points(summary.2$rss,col="green",pch=5)
+labels<-c("Exhaustive Search","Forward stepwise selection","Backward stepwise selection")
+legend("topright", col=c("purple","blue","green"),lty=1:3, legend=labels)
+```
+
+2. Each subset selection method results in a set of models. For each approach, choose a single optimal model by using Cp and BIC statistics respectively. Report the optimal models for each approach (i.e. specify the predictors in the optimal model).
+```{r}
+cp.1<-order(summary.1$cp)[1]
+bic.1<-order(summary.1$bic)[1]
+summary.1$which[cp.1,]
+# For model.1, which we use the exhausive search method, if we choose the optimal model by
+# using Cp, the model will have 6 predictors, which is Income, Limit, Rating, Cards, Age,
+# and StudentYes.
+summary.1$which[bic.1,]
+# If we choose the optimal model by using BIC, the model will have 4 predictors, which is Income, 
+# Limit, Cards and StudentYes.
+cp.2<-order(summary.2$cp)[1]
+bic.2<-order(summary.2$bic)[1]
+summary.2$which[cp.2,]
+# For model.2, which we use the forward selection method, if we choose the optimal model by
+# using Cp, the model will have 6 predictors, which is Income, Limit, Rating, Cards, Age,
+# and StudentYes.
+summary.2$which[bic.2,]
+# If we choose the optimal model by using BIC, the model will have 5 predictors, which is Income, 
+# Limit, Rating, Cards and StudentYes.
+cp.3<-order(summary.3$cp)[1]
+bic.3<-order(summary.3$bic)[1]
+summary.3$which[cp.3,]
+# For model.3, which we use the backward selection method, if we choose the optimal model by
+# using Cp, the model will have 6 predictors, which is Income, Limit, Rating, Cards, Age,
+# and StudentYes.
+summary.3$which[bic.3,]
+# If we choose the optimal model by using BIC, the model will have 4 predictors, which is Income, 
+# Limit, Cards and StudentYes.
+# From this problem, we can see that BIC tends to choose a model with less variables compared to
+# Cp because it penalized the complexity by log(n).
+```
+
